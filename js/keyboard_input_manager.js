@@ -67,6 +67,35 @@ KeyboardInputManager.prototype.listen = function () {
       self.restart.call(self, event);
     }
   });
+  
+  client = new Paho.MQTT.Client("localhost", 9001, "2048game");
+  
+  function onConnect() {
+    // Once a connection has been made, make a subscription and send a message.
+    console.log("onConnect");
+    client.subscribe("radar/gesture");
+  }
+  function onMessageArrived(message) {
+    console.log("onMessageArrived:"+message.payloadString);
+    if (message.destinationName == "radar/gesture") {
+      switch (message.payloadString) {
+        case "Swipe Up":
+          self.emit("move", 0);
+          break;
+        case "Swipe Right":
+          self.emit("move", 1);
+          break;
+        case "Swipe Down":
+          self.emit("move", 2);
+          break;
+        case "Swipe Left":
+          self.emit("move", 3);
+          break;
+      }
+    }
+  }
+  client.onMessageArrived = onMessageArrived;
+  client.connect({onSuccess:onConnect});
 
   // Respond to button presses
   this.bindButtonPress(".retry-button", this.restart);
